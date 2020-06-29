@@ -1,0 +1,61 @@
+## Clean up
+sudo mn -c 
+docker system prune -a
+
+## OVS setup
+mkdir -p /usr/local/etc/openvswitch
+ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+ovs-vsctl --no-wait init
+ovs-vsctl add-br br0
+ovs-vsctl show
+ifconfig br0 up
+ovs-vsctl add-port br0 ens3
+ovs-vsctl show
+ping 8.8.8.8
+ifconfig ens3 0
+ifconfig br0 192.168.0.6
+ovs-vsctl set bridge br0 other-config:hwaddr=
+route -n
+route add default gw 192.168.0.1 dev br0 
+
+
+
+### recover
+ovs-vsctl del-br br0 % delete the OVS bridge
+ifconfig ens3 % reassign the IP address of the ehternet interface
+route add default gw 192.168.0.1 ens3 % addi
+
+## MN
+sudo mn --switch ovsk --test iperf
+tcpdump -n -i h2-eth0
+
+## Download
+wget https://gitlab.thothlab.org/thoth-group/ThoThLabResource/raw/master/lab-cs-cns-00103.zip
+unzip lab-cs-cns-00103.zip
+sudo cp lab-cs-cns-00103/l2firewall.config pox/
+sudo cp lab-cs-cns-00103/l3firewall.config pox/
+sudo cp lab-cs-cns-00103/L3Firewall.py pox/forwarding/
+
+## Create topo
+sudo mn --topo=single,4 --controller=remote,port=6665 --controller=remote,port=6664 --switch=ovsk --mac
+sudo mn --topo=single,4 --controller=remote,port=6664 --switch=ovsk --mac
+
+## Set ip address 
+h1 sudo ifconfig h1-eth0 192.168.2.10 netmask 255.255.255.0
+h2 sudo ifconfig h2-eth0 192.168.2.20 netmask 255.255.255.0
+h3 sudo ifconfig h3-eth0 192.168.2.30 netmask 255.255.255.0
+h4 sudo ifconfig h4-eth0 192.168.2.40 netmask 255.255.255.0
+
+## Run pox
+./pox.py --verbose openflow.of_01  --port=6664 pox.forwarding.l2_learning pox.forwarding.L3Firewall --l2config="l2firewall.config" --l3config="l3firewall.config"
+
+## DDOS
+xterm h1
+hping3 192.168.2.20 -c 10000 -S --flood --rand-source -V
+hping3 192.168.2.20
+
+## OVS
+ovs-vsctl show
+ovs-vsctl list-ports s1
+ovs-ofctl show s1
+ovs-ofctl dump-flows s1
