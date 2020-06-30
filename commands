@@ -46,6 +46,20 @@ h2 sudo ifconfig h2-eth0 192.168.2.20 netmask 255.255.255.0
 h3 sudo ifconfig h3-eth0 192.168.2.30 netmask 255.255.255.0
 h4 sudo ifconfig h4-eth0 192.168.2.40 netmask 255.255.255.0
 
+h1 ip addr del  10.0.0.1/8 dev h1-eth0
+h2 ip addr del  10.0.0.2/8 dev h2-eth0
+h3 ip addr del  10.0.0.3/8 dev h3-eth0
+h4 ip addr del  10.0.0.4/8 dev h4-eth0
+h1 ip addr add  192.168.2.10/24 dev h1-eth0
+h2 ip addr add  192.168.2.20/24 dev h2-eth0
+h3 ip addr add  192.168.2.30/24 dev h3-eth0
+h4 ip addr add  192.168.2.40/24 dev h4-eth0
+h1 ip route add  default via 192.168.2.1
+h2 ip route add  default via 192.168.2.1
+h3 ip route add  default via 192.168.2.1
+h4 ip route add  default via 192.168.2.1
+
+
 ## Run pox
 ./pox.py --verbose openflow.of_01  --port=6664 pox.forwarding.l2_learning pox.forwarding.L3Firewall --l2config="l2firewall.config" --l3config="l3firewall.config"
 
